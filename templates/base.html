@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spendly</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f6fb; margin: 0; color: #222; }
+    nav { background: #4f46e5; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+    nav a { color: #fff; text-decoration: none; margin-left: 14px; }
+    .container { max-width: 420px; margin: 40px auto; padding: 0 16px; }
+    .card { background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    input { width: 100%; padding: 10px; margin: 6px 0 14px; border: 1px solid #ccc; border-radius: 8px; }
+    button { width: 100%; padding: 12px; background: #4f46e5; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    .flash { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+
+    
+/* Fix dashboard card overlap */
+.card {
+    position: relative;
+    box-sizing: border-box;
+    margin-bottom: 18px;
+    height: auto;
+    min-height: 0;
+}
+
+/* Keep the month selector separate from the spending card */
+form.card {
+    margin-bottom: 18px;
+    padding: 24px;
+}
+
+/* Prevent form controls from overflowing */
+.card input,
+.card select,
+.card button {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Consistent dashboard spacing */
+.card.space {
+    margin-bottom: 18px;
+}
+
+/* Keep dashboard content in normal document flow */
+main,
+.container,
+.dashboard {
+    height: auto;
+    overflow: visible;
+}
+
+  </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <strong>💸 Spendly</strong>
+    <div>
+      {% if session.username %}
+        {{ session.username }} <a href="{{ url_for('logout') }}">Logout</a>
+      {% endif %}
+    </div>
+  </nav>
+  <div class="container">
+    {% with messages = get_flashed_messages() %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

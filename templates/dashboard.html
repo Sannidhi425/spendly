@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+  .container { max-width: 760px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 120px; }
+  select { width: 100%; padding: 10px; margin: 6px 0 14px; border: 1px solid #ccc; border-radius: 8px; }
+  .total { font-size: 28px; font-weight: bold; color: #4f46e5; margin: 4px 0 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { text-align: left; padding: 10px 6px; border-bottom: 1px solid #eee; }
+  .del { width: auto; padding: 6px 12px; background: #c0392b; font-size: 14px; }
+  .space { margin-top: 20px; }
+  .chart-container {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<form method="GET" action="{{ url_for('dashboard') }}"
+      class="card space">
+    <label for="month">Select month</label>
+    <input
+        type="month"
+        id="month"
+        name="month"
+        value="{{ selected_month }}"
+        required
+    >
+    <button type="submit">View month</button>
+</form>
+
+<div class="card">
+  <p>This month's spending</p>
+  <p class="total">₹{{ "%.2f"|format(month_total) }}</p>
+</div>
+
+<div class="card space">
+  <h3>Spending by Category</h3>
+  <div class="chart-container">
+    <canvas
+      id="categoryChart"
+      data-category='{{ category_data | tojson | forceescape }}'>
+    </canvas>
+  </div>
+  <p id="chartEmpty" style="display: none;">
+    No expenses to show in the chart yet.
+  </p>
+</div>
+
+<div class="card space">
+  <h3>Add expense</h3>
+  <form method="POST" action="{{ url_for('add_expense') }}">
+    <div class="row">
+      <div><label>Title</label><input type="text" name="title" placeholder="Lunch" required></div>
+      <div><label>Amount (₹)</label><input type="number" name="amount" step="0.01" min="0.01" required></div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Category</label>
+        <select name="category">
+          {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div><label>Date</label><input type="date" name="expense_date" value="{{ today }}" required></div>
+    </div>
+    <button type="submit">Add expense</button>
+  </form>
+</div>
+
+<div class="card space">
+  <h3>Your expenses</h3>
+  {% if expenses %}
+  <table>
+    <tr>
+  <th>Date</th>
+  <th>Title</th>
+  <th>Category</th>
+  <th>Amount</th>
+  <th>Actions</th>
+</tr>
+    {% for e in expenses %}
+    <tr>
+      <td>{{ e.expense_date }}</td>
+      <td>{{ e.title }}</td>
+      <td>{{ e.category }}</td>
+      <td>₹{{ "%.2f"|format(e.amount) }}</td>
+      
+      <td>
+  <a href="{{ url_for('edit_expense', expense_id=e.id) }}">Edit</a>
+
+  <form method="POST"
+        action="{{ url_for('delete_expense', expense_id=e.id) }}"
+        onsubmit="return confirm('Delete this expense?');"
+        style="display: inline;">
+    <button class="del" type="submit">Delete</button>
+  </form>
+</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>No expenses yet. Add your first one above.</p>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const canvas = document.getElementById("categoryChart");
+  const categoryData = JSON.parse(canvas.dataset.category);
+
+  if (categoryData.length > 0) {
+    new Chart(canvas, {
+      type: "doughnut",
+      data: {
+        labels: categoryData.map(item => item.category),
+        datasets: [{
+          data: categoryData.map(item => item.total
+          )
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: window.devicePixelRatio || 1
+      }
+    });
+  } else {
+    document.getElementById("chartEmpty").style.display = "block";
+  }
+</script>
+{% endblock %}  
